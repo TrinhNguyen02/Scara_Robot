@@ -1,11 +1,11 @@
-function varargout = mySCARA(varargin)
+    function varargout = mySCARA(varargin)
 % MYSCARA MATLAB code for mySCARA.fig
 %      MYSCARA, by itself, creates a new MYSCARA or raises the existing
 %      singleton*.
 %
 %      H = MYSCARA returns the handle to a new MYSCARA or the handle to
 %      the existing singleton*.
-%
+%   
 %      MYSCARA('CALLBACK',hObject,eventData,handles,...) calls the local
 %      function named CALLBACK in MYSCARA.M with the given input arguments.
 %
@@ -22,7 +22,7 @@ function varargout = mySCARA(varargin)
 
 % Edit the above text to modify the response to help mySCARA
 
-% Last Modified by GUIDE v2.5 13-Nov-2023 11:19:58
+% Last Modified by GUIDE v2.5 09-Dec-2023 15:01:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,14 +61,16 @@ guidata(hObject, handles);
 % UIWAIT makes mySCARA wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
+
 % Setup for SCARA       ratio scale = 1/100
 global scara
+
+
 
 a     = [125/100        175/100     0           0   ];
 alpha = [0              0           0           180 ];
 d     = [(162.5+24)/100 0           74.5/100    0   ];
 theta = [0              0           0           0   ];
-
 
 
 % a     = [0 125/100 175/100 0 0];
@@ -85,8 +87,10 @@ scara = scara.set_joint_variable(4, deg2rad(get(handles.slider4_th4, 'Value')));
 scara = scara.update();
 Update_EndEffector(scara, handles);
 scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
+
+
 % set(handles.edit1,'string', num2str(get(handles.slider1_th1,'value')));
-grid on
+% grid on
 % RESET_Callback(hObject, eventdata, handles);
 % space_select_Callback(hObject, eventdata, handles);
 
@@ -322,6 +326,25 @@ global scara
     Update_EndEffector(scara, handles);
     scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
 
+    % -------Reset varible slider---------------% 
+set(handles.slider1_th1, 'Value', 0);
+set(handles.edit1,'string', num2str(get(handles.slider1_th1,'value')));
+set(handles.slider2_th2, 'Value', 0);
+set(handles.edit2,'string', num2str(get(handles.slider2_th2,'value')));
+set(handles.slider3_d3, 'Value', 0.745);
+set(handles.edit3,'string', num2str((get(handles.slider3_d3,'value')-0.745)));
+set(handles.slider4_th4, 'Value', 0);
+set(handles.edit4,'string', num2str(get(handles.slider4_th4,'value')));
+
+set(handles.xSlider, 'Value', 0);
+set(handles.xEdit,'string', num2str(3+ get(handles.xSlider,'value')));
+set(handles.ySlider, 'Value', 0);
+set(handles.yEdit,'string', num2str(get(handles.ySlider,'value')));
+set(handles.zSlider, 'Value', 1.12);
+set(handles.zEdit,'string', num2str(get(handles.zSlider,'value')));
+set(handles.yawSlider, 'Value', 0);
+set(handles.yawEdit,'string', num2str(get(handles.yawSlider,'value')));
+
 % --- Executes on button press in Workspace.
 function Workspace_Callback(hObject, eventdata, handles)
 % hObject    handle to Workspace (see GCBO)
@@ -514,19 +537,35 @@ end
 set(handles.Btn_Forward,'Enable','on','String', 'Forward');
 
 
+
+
+
 % --- Executes on slider movement.
-function slider10_Callback(hObject, eventdata, handles)
-% hObject    handle to slider10 (see GCBO)
+function ySlider_Callback(hObject, eventdata, handles)
+% hObject    handle to ySlider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+set(handles.yEdit,'string', num2str(get(handles.ySlider,'value')));
+global scara
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+EndEffector =  [(3 + get(handles.xSlider,'value')), get(handles.ySlider,'value'), get(handles.zSlider,'value') , get(handles.yawSlider,'value')];
+joint = Inverse_Kinematics(scara.a, scara.alpha, scara.d, scara.theta, EndEffector);
+    scara = scara.set_joint_variable(1, joint(1));
+    scara = scara.set_joint_variable(2, joint(2));
+    scara = scara.set_joint_variable(3, joint(3));
+    scara = scara.set_joint_variable(4, joint(4));
+scara = scara.update();
+Update_EndEffector(scara, handles);
+scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
 
 
 % --- Executes during object creation, after setting all properties.
-function slider10_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to slider10 (see GCBO)
+function ySlider_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ySlider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -537,41 +576,33 @@ end
 
 
 
-function edit40_Callback(hObject, eventdata, handles)
-% hObject    handle to edit40 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit40 as text
-%        str2double(get(hObject,'String')) returns contents of edit40 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit40_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit40 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on slider movement.
-function slider11_Callback(hObject, eventdata, handles)
-% hObject    handle to slider11 (see GCBO)
+function zSlider_Callback(hObject, eventdata, handles)
+% hObject    handle to zSlider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+global scara
+set(handles.zEdit,'string', num2str(get(handles.zSlider,'value')));
 
+EndEffector =  [(3 + get(handles.xSlider,'value')), get(handles.ySlider,'value'),get(handles.zSlider,'value') , get(handles.yawSlider,'value')];
+joint = Inverse_Kinematics(scara.a, scara.alpha, scara.d, scara.theta, EndEffector);
+    scara = scara.set_joint_variable(1, joint(1));
+    scara = scara.set_joint_variable(2, joint(2));
+    scara = scara.set_joint_variable(3, joint(3));
+    scara = scara.set_joint_variable(4, joint(4));
+scara = scara.update();
+Update_EndEffector(scara, handles);
+scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
 
 % --- Executes during object creation, after setting all properties.
-function slider11_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to slider11 (see GCBO)
+function zSlider_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to zSlider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -582,64 +613,31 @@ end
 
 
 
-function edit41_Callback(hObject, eventdata, handles)
-% hObject    handle to edit41 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit41 as text
-%        str2double(get(hObject,'String')) returns contents of edit41 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit41_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit41 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function edit42_Callback(hObject, eventdata, handles)
-% hObject    handle to edit42 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit42 as text
-%        str2double(get(hObject,'String')) returns contents of edit42 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit42_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit42 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on slider movement.
-function slider12_Callback(hObject, eventdata, handles)
-% hObject    handle to slider12 (see GCBO)
+function yawSlider_Callback(hObject, eventdata, handles)
+% hObject    handle to yawSlider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+set(handles.yawEdit,'string', num2str(get(handles.yawSlider,'value')));
+global scara
+
+EndEffector =  [(3 + get(handles.xSlider,'value')), get(handles.ySlider,'value'),get(handles.zSlider,'value') , get(handles.yawSlider,'value')];
+joint = Inverse_Kinematics(scara.a, scara.alpha, scara.d, scara.theta, EndEffector);
+    scara = scara.set_joint_variable(1, joint(1));
+    scara = scara.set_joint_variable(2, joint(2));
+    scara = scara.set_joint_variable(3, joint(3));
+    scara = scara.set_joint_variable(4, joint(4));
+scara = scara.update();
+Update_EndEffector(scara, handles);
+scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
 
 
 % --- Executes during object creation, after setting all properties.
-function slider12_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to slider12 (see GCBO)
+function yawSlider_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to yawSlider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -650,18 +648,50 @@ end
 
 
 
-function edit43_Callback(hObject, eventdata, handles)
-% hObject    handle to edit43 (see GCBO)
+
+% --- Executes on slider movement.
+function xSlider_Callback(hObject, eventdata, handles)
+% hObject    handle to xSlider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.xEdit,'string', num2str(3+ get(handles.xSlider,'value')));
+global scara
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+EndEffector =  [(3 + get(handles.xSlider,'value')), get(handles.ySlider,'value'), get(handles.zSlider,'value') , get(handles.yawSlider,'value')];
+joint = Inverse_Kinematics(scara.a, scara.alpha, scara.d, scara.theta, EndEffector);
+    scara = scara.set_joint_variable(1, joint(1));
+    scara = scara.set_joint_variable(2, joint(2));
+    scara = scara.set_joint_variable(3, joint(3));
+    scara = scara.set_joint_variable(4, joint(4));
+scara = scara.update();
+Update_EndEffector(scara, handles);
+scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
+
+% --- Executes during object creation, after setting all properties.
+function xSlider_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to xSlider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+function xEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to xedit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit43 as text
-%        str2double(get(hObject,'String')) returns contents of edit43 as a double
+% Hints: get(hObject,'String') returns contents of xedit as text
+%        str2double(get(hObject,'String')) returns contents of xedit as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit43_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit43 (see GCBO)
+function xEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to xedit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -672,23 +702,498 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on slider movement.
-function slider13_Callback(hObject, eventdata, handles)
-% hObject    handle to slider13 (see GCBO)
+
+function yEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to yEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+% Hints: get(hObject,'String') returns contents of yEdit as text
+%        str2double(get(hObject,'String')) returns contents of yEdit as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function slider13_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to slider13 (see GCBO)
+function yEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to yEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
+
+
+
+function zEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to zEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of zEdit as text
+%        str2double(get(hObject,'String')) returns contents of zEdit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function zEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to zEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function yawEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to yawEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of yawEdit as text
+%        str2double(get(hObject,'String')) returns contents of yawEdit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function yawEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to yawEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function xNext_Callback(hObject, eventdata, handles)
+% hObject    handle to xNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of xNext as text
+%        str2double(get(hObject,'String')) returns contents of xNext as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function xNext_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to xNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function yNext_Callback(hObject, eventdata, handles)
+% hObject    handle to yNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of yNext as text
+%        str2double(get(hObject,'String')) returns contents of yNext as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function yNext_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to yNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function zNext_Callback(hObject, eventdata, handles)
+% hObject    handle to zNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of zNext as text
+%        str2double(get(hObject,'String')) returns contents of zNext as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function zNext_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to zNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function rollNext_Callback(hObject, eventdata, handles)
+% hObject    handle to rollNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of rollNext as text
+%        str2double(get(hObject,'String')) returns contents of rollNext as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function rollNext_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to rollNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function pitchNext_Callback(hObject, eventdata, handles)
+% hObject    handle to pitchNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of pitchNext as text
+%        str2double(get(hObject,'String')) returns contents of pitchNext as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function pitchNext_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pitchNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function yawNext_Callback(hObject, eventdata, handles)
+% hObject    handle to yawNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of yawNext as text
+%        str2double(get(hObject,'String')) returns contents of yawNext as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function yawNext_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to yawNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in motionBtn.
+function motionBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to motionBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global scara
+pC = zeros(1, 4);
+pC(1) = str2double(get(handles.xCurr, 'String'));
+pC(2) = str2double(get(handles.yCurr, 'String'));
+pC(3) = str2double(get(handles.zCurr, 'String'));
+pC(4) = deg2rad(str2double(get(handles.yawCurr, 'String')));
+
+pN = zeros(1, 4);
+pN(1) = str2double(get(handles.xNext, 'String'));
+pN(2) = str2double(get(handles.yNext, 'String'));
+pN(3) = str2double(get(handles.zNext, 'String'));
+pN(4) = deg2rad(str2double(get(handles.yawNext, 'String')));
+
+
+vMax = str2double(get(handles.vMax, 'String'));
+aMax = str2double(get(handles.aMax, 'String'));
+tMax = str2double(get(handles.tMax, 'String'));
+qMax = sqrt((pN(1) - pC(1))^2 + (pN(2) - pC(2))^2 + (pN(3) - pC(3))^2);
+
+jointCurr = Inverse_Kinematics(scara.a, scara.alpha, scara.d, scara.theta, pC)
+jointNext = Inverse_Kinematics(scara.a, scara.alpha, scara.d, scara.theta, pN)
+
+qTh1Max = abs(jointNext(1)- jointCurr(1));
+qTh2Max = abs(jointNext(2)- jointCurr(2));
+qD3Max = abs(jointNext(3)- jointCurr(3));
+qTh4Max = abs(jointNext(4)- jointCurr(4));
+
+
+contents = cellstr(get(handles.Trajectory, 'String'));
+typeTrajectory = contents{get(handles.Trajectory, 'Value')};
+
+if strcmp(typeTrajectory, 'LSPB')
+    [t, q, qdot, q2dot] = LSPB(qMax, vMax, aMax);
+    [t, qTh1,  vTh1,  aTh1] = LSPB(qTh1Max, 1/6*pi, 1/12*pi);
+    [t, qTh2,  vTh2,  aTh2] = LSPB(qTh2Max, 1/6*pi, 1/12*pi);
+    [t, qD3,  vD3,  aD3]    = LSPB(qD3Max, 0.1, 1);
+    [t, qTh4,  vTh4,  aTh4] = LSPB(qTh4Max, 1/6*pi, 1/12*pi);
+elseif strcmp(typeTrajectory, 'Scurve5')
+    [t, q, qdot, q2dot] = Scurve5(qMax, vMax, aMax);
+    [t, qTh1,  vTh1,  aTh1] = Scurve5(qTh1Max, 1/6*pi, 1/6*pi);
+    [t, qTh2,  vTh2,  aTh2] = Scurve5(qTh2Max, 1/6*pi, 1/6*pi);
+    [t, qD3,  vD3,  aD3]    = Scurve5(qD3Max, 0.1, 1);
+    [t, qTh4,  vTh4,  aTh4] = Scurve5(qTh4Max, 1/6*pi, 1/6*pi);
+
+elseif strcmp(typeTrajectory, 'Scurve7')
+    [t, q, qdot, q2dot] = Scurve7(qMax, vMax, aMax);
+    [t, qTh1,  vTh1,  aTh1] = Scurve7(qTh1Max, 1/6*pi, 1/6*pi);
+    [t, qTh2,  vTh2,  aTh2] = Scurve7(qTh2Max, 1/6*pi, 1/6*pi);
+    [t, qD3,  vD3,  aD3]    = Scurve7(qD3Max, 0.1, 1);
+    [t, qTh4,  vTh4,  aTh4] = Scurve7(qTh4Max, 1/6*pi, 1/6*pi);
+end
+
+    [t, p, pdot, p2dot] = Linear_Interpolation(pC, pN, t, q, qdot, q2dot);
+
+    
+
+
+for i = 1:length(t)
+    point = [p(1,i), p(2,i), p(3,i), p(4,i)];
+    joint(:,i) = Inverse_Kinematics(scara.a, scara.alpha, scara.d, scara.theta, point);
+    set(handles.motionBtn,'Enable','off','String', 'Not Push');
+
+    scara = scara.set_joint_variable(1, joint(1,i));
+    scara = scara.set_joint_variable(2, joint(2,i));
+    scara = scara.set_joint_variable(3, joint(3,i));
+    scara = scara.set_joint_variable(4, joint(4,i));
+    scara = scara.update();
+    Update_EndEffector(scara, handles);
+    scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
+
+    plot(handles.axes_s, t(1:i), q(1:i), 'b-');
+    grid(handles.axes_s, 'on');
+    plot(handles.axes_v , t(1:i), qdot(1:i), 'b-');
+    grid(handles.axes_v, 'on');
+    plot(handles.axes_a , t(1:i), q2dot(1:i), 'b-');
+    grid(handles.axes_a, 'on');
+
+
+
+    plot(handles.axes_Th1, t(1:i), qTh1(1:i), 'b-');
+    grid(handles.axes_Th1, 'on');
+    plot(handles.axes_vTh1, t(1:i) , vTh1(1:i), 'b-');
+    grid(handles.axes_vTh1, 'on');
+    plot(handles.axes_aTh1 , t(1:i), aTh1(1:i), 'b-');
+    grid(handles.axes_aTh1, 'on');
+
+    plot(handles. axes_Th2, t(1:i), qTh2(1:i), 'b-');
+    grid(handles. axes_Th2, 'on');
+    plot(handles.axes_vTh2, t(1:i), vTh2(1:i), 'b-');
+    grid(handles.axes_vTh2, 'on');
+    plot(handles.axes_aTh2 , t(1:i), aTh2(1:i), 'b-');
+    grid(handles.axes_aTh2, 'on');
+
+
+    plot(handles.axes_D3, t(1:i), qD3(1:i), 'b-');
+    grid(handles.axes_D3, 'on');
+    plot(handles.axes_vD3, t(1:i), vD3(1:i), 'b-');
+    grid(handles.axes_vD3, 'on');
+    plot(handles.axes_aD3 , t(1:i), aD3(1:i), 'b-');
+    grid(handles.axes_aD3, 'on');
+
+
+    plot(handles.axes_Th4, t(1:i), qTh4(1:i), 'b-');
+    grid(handles.axes_Th4, 'on');
+    plot(handles.axes_vTh4, t(1:i), vTh4(1:i), 'b-');
+    grid(handles.axes_vTh4, 'on');
+    plot(handles.axes_aTh4 , t(1:i), aTh4(1:i), 'b-');
+    grid(handles.axes_aTh4, 'on');
+
+        
+    plot(handles.axes_pX, t(1:i), p(1,1:i), 'b-');
+    grid(handles.axes_pX, 'on');
+    plot(handles.axes_pY, t(1:i), p(2,1:i), 'b-');
+    grid(handles.axes_pY, 'on');
+    plot(handles.axes_pZ , t(1:i), p(3,1:i), 'b-');
+    grid(handles.axes_pZ, 'on');    
+  
+    plot3(handles.axes1, p(1,1:i), p(2,1:i), p(3,1:i), 'LineWidth', 2, 'Color', [0.9 0.1 0.1]);
+end
+%     plot(handles.axes_vTh1, t, vTh1, 'b-');
+%     grid(handles.axes_vTh1, 'on');
+%     plot(handles.axes_vTh2, t, vTh2, 'b-');
+%     grid(handles.axes_vTh2, 'on');
+%     plot(handles.axes_vD3, t, vD3, 'b-');
+%     grid(handles.axes_vD3, 'on');
+%     plot(handles.axes_vTh4, t, vTh4, 'b-');
+%     grid(handles.axes_vTh4, 'on');
+    
+    set(handles.motionBtn,'Enable','on','String', 'Go to');
+
+
+% --- Executes on button press in pushbutton3.
+function pushbutton3_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+function vMax_Callback(hObject, eventdata, handles)
+% hObject    handle to vMax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of vMax as text
+%        str2double(get(hObject,'String')) returns contents of vMax as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function vMax_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to vMax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function aMax_Callback(hObject, eventdata, handles)
+% hObject    handle to aMax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of aMax as text
+%        str2double(get(hObject,'String')) returns contents of aMax as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function aMax_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to aMax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function tMax_Callback(hObject, eventdata, handles)
+% hObject    handle to tMax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of tMax as text
+%        str2double(get(hObject,'String')) returns contents of tMax as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function tMax_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to tMax (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on mouse motion over figure - except title and menu.
+function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on selection change in Trajectory.
+function Trajectory_Callback(hObject, eventdata, handles)
+% hObject    handle to Trajectory (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns Trajectory contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from Trajectory
+
+
+% --- Executes during object creation, after setting all properties.
+function Trajectory_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Trajectory (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in typePlot.
+function typePlot_Callback(hObject, eventdata, handles)
+% hObject    handle to typePlot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns typePlot contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from typePlot
+    contents = cellstr(get(handles.typePlot, 'String'));
+    typePlot = contents{get(handles.typePlot, 'Value')};
+if strcmp(typePlot, 'S-V-A')
+    set(handles.svaPlot, 'Visible', 'on');
+    set(handles.xyzPlot, 'Visible', 'off');
+    set(handles.jointPlot, 'Visible', 'off');
+elseif strcmp(typePlot, 'Tool_Space')
+    set(handles.xyzPlot, 'Visible', 'on');
+    set(handles.svaPlot, 'Visible', 'off');
+    set(handles.jointPlot, 'Visible', 'off');
+elseif strcmp(typePlot, 'Joint_Space')
+    set(handles.jointPlot, 'Visible', 'on');
+    set(handles.xyzPlot, 'Visible', 'off');
+    set(handles.svaPlot, 'Visible', 'off');
+
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function typePlot_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to typePlot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in dhBtn.
+function dhBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to dhBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global scara
+table((1:scara.n)', scara.a', scara.alpha', scara.d', scara.theta', 'VariableNames', {'Joint', 'a', 'alpha', 'd', 'theta'})

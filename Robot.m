@@ -5,10 +5,10 @@
     properties                  % cac thuoc tinh cua class
         a, alpha, d, theta      % bang DH 
         type, base, n           % type cua khop, base vi tri co so, n so luong 
-        x, T,  EndEffector, J   % x la mang chua toa do 3D (x, y, z) cac diem cua khop
+        x, DH,  EndEffector      % x la mang chua toa do 3D (x, y, z) cac diem cua khop
                                 % T ma tran DH 
                                 %  EndEffector la mang [x, y, z, roll, pitch, yaw]
-                                % J jacobian matrix
+                           
 
     end
     
@@ -37,19 +37,18 @@
         
         
         function obj = update(obj)
-            obj.T = Forward_Kinematics(obj.n, obj.a, obj.alpha, obj.d, obj.theta);
+            obj.DH = Forward_Kinematics(obj.n, obj.a, obj.alpha, obj.d, obj.theta);
             for i = 1:obj.n+1
-                obj.x(:,i) = (obj.T(1:3,4,i)) + obj.base;
+                obj.x(:,i) = (obj.DH(1:3,4,i)) + obj.base;
             end
-            obj. EndEffector = [obj.x(:,obj.n+1); tform2eul(obj.T(:,:,obj.n+1))'];
-            obj.J = Jacobian(obj.n, obj.a, obj.alpha, obj.d, obj.theta, obj.type);
+            obj. EndEffector = [obj.x(:,obj.n+1); (obj.theta(1)+obj.theta(2) + obj.theta(4))'];
         end
 
 
         function plot_frame(obj, axes)
             Link = [0; 0; 1.865]; 
             Link = [obj.x(:, 1), Link, obj.x(:, 2:end)]; % chen them khop giua base va khop 1
-            plot3(axes, Link(1,:), Link(2,:), Link(3,:), '-o', 'LineWidth', 5);
+            plot3(axes, Link(1,:), Link(2,:), Link(3,:), '-o', 'LineWidth', 4);
             
         end
         
@@ -58,19 +57,25 @@
             vy = zeros(3, obj.n+1);
             vz = zeros(3, obj.n+1);
             for i = 1:obj.n+1
-                vx(:,i) = obj.T(1:3,1:3,i)*[1; 0; 0];
-                vy(:,i) = obj.T(1:3,1:3,i)*[0; 1; 0];
-                vz(:,i) = obj.T(1:3,1:3,i)*[0; 0; 1];
+                vx(:,i) = obj.DH(1:3,1:3,i)*[1; 0; 0];
+                vy(:,i) = obj.DH(1:3,1:3,i)*[0; 1; 0];
+                vz(:,i) = obj.DH(1:3,1:3,i)*[0; 0; 1];
             end
             vx(:,obj.n) = [0, 0, 0];
             vy(:,obj.n) = [0, 0, 0];
             vz(:,obj.n) = [0, 0, 0];
             
             % Plot ref frame of each joint
-            axis_scale = 1/3;
+            axis_scale = 1/2;
             quiver3(axes, obj.x(1,:), obj.x(2,:), obj.x(3,:), vx(1,:), vx(2,:), vx(3,:), axis_scale, 'r', 'LineWidth', 2);
+            text(obj.x(1,:)+2*axis_scale*vx(1,:), obj.x(2,:)+2*axis_scale*vx(2,:), obj.x(3,:)+2*axis_scale*vx(3,:), 'x', 'Color', 'r');
+            
             quiver3(axes, obj.x(1,:), obj.x(2,:), obj.x(3,:), vy(1,:), vy(2,:), vy(3,:), axis_scale, 'g', 'LineWidth', 2);
+            text(obj.x(1,:)+2*axis_scale*vy(1,:), obj.x(2,:)+2*axis_scale*vy(2,:), obj.x(3,:)+2*axis_scale*vy(3,:), 'y', 'Color', 'g');
+            
             quiver3(axes, obj.x(1,:), obj.x(2,:), obj.x(3,:), vz(1,:), vz(2,:), vz(3,:), axis_scale, 'b', 'LineWidth', 2);
+            text(obj.x(1,:)+2*axis_scale*vz(1,:), obj.x(2,:)+2*axis_scale*vz(2,:), obj.x(3,:)+2*axis_scale*vz(3,:), 'z', 'Color', 'b');
+
         end
         
         function plot_arm(obj, axes)
@@ -94,6 +99,16 @@
             H3 = 24/100;
             L3 = obj.a(2);
             
+
+            th = linspace(0, 2*pi, 100);
+            Z1 = ones(1,size(th,2))*obj.x(3,3);
+            Z2 = ones(1,size(th,2))*(obj.x(3,3)-0.745);
+            X = 0.3*cos(th) + obj.x(1,3);
+            Y = 0.3*sin(th) + obj.x(2,3);
+            surf(axes, [X;X], [Y;Y], [Z1;Z2], 'FaceColor', COLOR_GREEN, 'EdgeColor', 'none', 'FaceAlpha', opacity);
+            fill3(axes, X , Y , Z1, COLOR_GREEN, 'FaceAlpha', opacity);
+            fill3(axes, X , Y , Z2, COLOR_GREEN, 'FaceAlpha', opacity);   
+
             % Link 1
 
             X = obj.x(1,1) + 50/100;
@@ -105,6 +120,8 @@
             fill3(axes, [X-W2/2*sin(yaw), X+W2/2*sin(yaw), X+L1*cos(yaw)+W2/2*sin(yaw), X+L1*cos(yaw)-W2/2*sin(yaw)], [Y+W2/2*cos(yaw), Y-W2/2*cos(yaw), Y+L1*sin(yaw)-W2/2*cos(yaw), Y+L1*sin(yaw)+W2/2*cos(yaw)], [Z2, Z2, Z2, Z2], COLOR_RED, 'FaceAlpha', opacity)
             fill3(axes, [X+W2/2*sin(yaw), X+W2/2*sin(yaw)+L1*cos(yaw), X+W2/2*sin(yaw)+L1*cos(yaw), X+W2/2*sin(yaw)], [Y-W2/2*cos(yaw), Y+L1*sin(yaw)-W2/2*cos(yaw), Y+L1*sin(yaw)-W2/2*cos(yaw), Y-W2/2*cos(yaw)], [Z1, Z1, Z2, Z2], COLOR_RED, 'FaceAlpha', opacity)
             fill3(axes, [X-W2/2*sin(yaw), X-W2/2*sin(yaw)+L1*cos(yaw), X-W2/2*sin(yaw)+L1*cos(yaw), X-W2/2*sin(yaw)], [Y+W2/2*cos(yaw), Y+L1*sin(yaw)+W2/2*cos(yaw), Y+L1*sin(yaw)+W2/2*cos(yaw), Y+W2/2*cos(yaw)], [Z1, Z1, Z2, Z2], COLOR_RED, 'FaceAlpha', opacity)
+      
+            
             % Link 2
             X = 0;
             Y = 0;
@@ -135,6 +152,8 @@
             fill3(axes, X, Y, Z1, COLOR_SKYBLUE, 'FaceAlpha', opacity);
             fill3(axes, X, Y, Z2, COLOR_SKYBLUE, 'FaceAlpha', opacity);
             
+
+
             % Link 3
             X = obj.x(1,2);
             Y = obj.x(2,2);
@@ -165,16 +184,6 @@
 
 
             th = linspace(0, 2*pi, 100);
-            Z1 = ones(1,size(th,2))*obj.x(3,3);
-            Z2 = ones(1,size(th,2))*(obj.x(3,3)-0.745);
-            X = 0.3*cos(th) + obj.x(1,3);
-            Y = 0.3*sin(th) + obj.x(2,3);
-            surf(axes, [X;X], [Y;Y], [Z1;Z2], 'FaceColor', COLOR_GREEN, 'EdgeColor', 'none', 'FaceAlpha', opacity);
-            fill3(axes, X , Y , Z1, COLOR_GREEN, 'FaceAlpha', opacity);
-            fill3(axes, X , Y , Z2, COLOR_GREEN, 'FaceAlpha', opacity);
-
-
-            th = linspace(0, 2*pi, 100);
             Z1 = ones(1,size(th,2))*(obj.x(3,3) -0.745);
             Z2 = ones(1,size(th,2))*(obj.x(3,5));
             X = 0.15*cos(th) + obj.x(1,3);
@@ -182,15 +191,24 @@
             surf(axes, [X;X], [Y;Y], [Z1;Z2], 'FaceColor', COLOR_DARKBLUE, 'EdgeColor', 'none', 'FaceAlpha', opacity);
             fill3(axes, X , Y , Z1, COLOR_DARKBLUE, 'FaceAlpha', opacity);
             fill3(axes, X , Y , Z2, COLOR_DARKBLUE, 'FaceAlpha', opacity);
+
+
+
             
             Z1 = ones(1,size(th,2))*(obj.x(3,5));
-            Z2 = ones(1,size(th,2))*(obj.x(3,5)-0.2);
-            
+            Z2 = ones(1,size(th,2))*(obj.x(3,5)-0.3);
+            X = 0.05*cos(th) + obj.x(1,3);
+            Y = 0.05*sin(th) + obj.x(2,3);
             yaw = (obj.theta(1)+obj.theta(2) + obj.theta(4));
-            Xa = [X+1/2*sin(yaw), X+1/2*sin(yaw), X-1/2*sin(yaw), X-1/2*sin(yaw)];
-            Ya = [Y-1/2*cos(yaw), Y-1/2*cos(yaw), Y+1/2*cos(yaw), Y+1/2*cos(yaw)];
-            Za = [Z2, Z1, Z1, Z2];
-            plot3(axes, Xa , Ya, Za);
+            Xa = [X+1/4*sin(yaw); X+1/4*sin(yaw); X-1/4*sin(yaw); X-1/4*sin(yaw)];
+            Ya = [Y-1/4*cos(yaw); Y-1/4*cos(yaw); Y+1/4*cos(yaw); Y+1/4*cos(yaw)];
+            Za = [Z2; Z1; Z1; Z2];
+            plot3(axes, Xa , Ya, Za, 'LineWidth',1, 'Color',[0.1,0.1,0.9]);
+
+
+
+
+
 %             th = linspace(0+yaw-pi/8-pi/2, yaw +pi/8-pi/2, 100);
 %             X1 = R2*cos(th) + obj.x(1,3);
 %             Y1 = R2*sin(th)  + obj.x(2,3);
@@ -202,7 +220,7 @@
 %             Y2 = R2*sin(th) + obj.x(2,3);
 %             surf(axes, [X2;X2], [Y2;Y2], [Z1;Z2], 'FaceColor', COLOR_BLUE, 'EdgeColor', 'none', 'FaceAlpha', opacity);
 %             fill3(axes, X2 , Y2 , Z1, COLOR_BLUE, 'FaceAlpha', opacity);
-            
+%             
         end
         
         function plot_workspace(obj, axes)
@@ -253,17 +271,21 @@
             zlabel(axes, 'z');
             xlim(axes, [obj.base(1)-4 obj.base(1)+4]);
             ylim(axes, [obj.base(2)-4 obj.base(2)+4]);
-            zlim(axes, [obj.base(3)   obj.base(3)+3]);
+            zlim(axes, [obj.base(3)-1   obj.base(3)+3]);
             obj.plot_frame(axes);
+
+%             view(150,30);
             if coords
                 obj.plot_coords(axes);
             end
-            obj.plot_arm(axes);
             if workspace
                 obj.plot_workspace(axes);
-            end
-            view(axes, 3);
+            end            
+            obj.plot_arm(axes);
+%             view(axes, 33, 33);
+            grid on
             drawnow;
-        end    end
+        end    
+    end
 end
 
