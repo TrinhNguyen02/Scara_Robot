@@ -2,7 +2,7 @@ function [t, q, qdot, q2dot] = LSPB(pmax, vmax, amax)
 %     p = q     
 %     v = q' (qdot)
 %     a = q" (q2dot)
-pmax = abs(pmax)
+pmax = abs(pmax);
 if vmax > sqrt(pmax*amax)
     vmax = sqrt(pmax*amax);
 end

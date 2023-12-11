@@ -7,7 +7,7 @@
         type, base, n           % type cua khop, base vi tri co so, n so luong 
         x, DH,  EndEffector      % x la mang chua toa do 3D (x, y, z) cac diem cua khop
                                 % T ma tran DH 
-                                %  EndEffector la mang [x, y, z, yaw]
+                                %  EndEffector la mang [x, y, z, roll, pitch, yaw]
                            
 
     end
@@ -232,10 +232,10 @@
             Y = (obj.a(1) + obj.a(2))*sin(th);
             Z1 = ones(1, size(th, 2))*(obj.d(1)-74.5/100-160/100);
             Z2 = ones(1, size(th, 2))*(obj.d(1)-74.5/100);
-            surf(axes, [X;X], [Y;Y], [Z1;Z2], 'FaceColor', PURPLE_COLOR, 'EdgeColor', 'none', 'FaceAlpha', 0.3);
+            surf(axes, [X;X], [Y;Y], [Z1;Z2], 'FaceColor', COLOR_BLUE, 'EdgeColor', 'none', 'FaceAlpha', 0.3);
             R =    sqrt(obj.a(1)^2 + obj.a(2)^2 - 2*obj.a(1)*obj.a(2)*cosd(180-145));
             
-            th = deg2rad(linspace(-125, -182, 100));
+            th = deg2rad(linspace(-125, -183, 100));
             X = -obj.a(1)*cos(55*pi/180) + obj.a(2)*cos(th);
             Y = -obj.a(1)*sin(55*pi/180) + obj.a(2)*sin(th);
             surf(axes, [X;X], [Y;Y], [Z1;Z2], 'FaceColor', COLOR_BLUE, 'EdgeColor', 'none', 'FaceAlpha', 0.3);
@@ -245,12 +245,12 @@
             surf(axes, [X;X], [Y;Y], [Z1;Z2], 'FaceColor', COLOR_BLUE, 'EdgeColor', 'none', 'FaceAlpha', 0.3);
 
             
-            th = deg2rad(linspace(125, 182, 100));
+            th = deg2rad(linspace(125, 183, 100));
             X = -obj.a(1)*cos(55*pi/180) + obj.a(2)*cos(th);
             Y = obj.a(1)*sin(55*pi/180) + obj.a(2)*sin(th);
             surf(axes, [X;X], [Y;Y], [Z1;Z2], 'FaceColor', COLOR_BLUE, 'EdgeColor', 'none', 'FaceAlpha', 0.3);
             
-            th = deg2rad(linspace(-111.407, 111.407, 100));
+            th = deg2rad(linspace(-111.5, 111.5, 100));
             X = R*cos(th);
             Y = R*sin(th);
             surf(axes, [X;X], [Y;Y], [Z1;Z2], 'FaceColor', COLOR_BLUE, 'EdgeColor', 'none', 'FaceAlpha', 0.3);

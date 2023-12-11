@@ -519,7 +519,7 @@ D3  = get(handles.slider3_d3,'value')-0.745;
 Th4 = deg2rad(get(handles.slider4_th4, 'Value'));
 vMax = str2double(get(handles.vMax, 'String'));
 aMax = str2double(get(handles.aMax, 'String'));
-if isnan(vMax) || isnan(aMax)
+if (v) || isempty(aMax)
     vMax = pi/6;
     aMax = pi/12;
 end
@@ -567,7 +567,7 @@ for i = 1:length(t)
     scara = scara.update();
     Update_EndEffector(scara, handles);
     scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
-    pEEF(:,i) = scara.EndEffector;
+    pEEF(:,i) = scara.EndEffector
 
 
     plot(handles.axes_Th1, t(1:i), qTh1(1:i), 'b-');
@@ -1018,14 +1018,6 @@ qTh1Max = abs(jointNext(1)- jointCurr(1));
 qTh2Max = abs(jointNext(2)- jointCurr(2));
 qD3Max = abs(jointNext(3)- jointCurr(3));
 qTh4Max = abs(jointNext(4)- jointCurr(4));
-vMax = str2double(get(handles.vMax, 'String'));
-aMax = str2double(get(handles.aMax, 'String'));
-if isnan(vMax) || isnan(aMax)
-    vMax = pi/6;
-    aMax = pi/12;
-end
-vMax = vMax*pi/180;
-aMax = aMax *pi/180;
 
 
 contents = cellstr(get(handles.Trajectory, 'String'));
@@ -1033,23 +1025,23 @@ typeTrajectory = contents{get(handles.Trajectory, 'Value')};
 
 if strcmp(typeTrajectory, 'LSPB')
 %     [t, q, qdot, q2dot] = LSPB(qMax, vMax, aMax);
-    [t, qTh1,  vTh1,  aTh1] = LSPB(qTh1Max, vMax, aMax);
-    [t, qTh2,  vTh2,  aTh2] = LSPB(qTh2Max, vMax, aMax);
+    [t, qTh1,  vTh1,  aTh1] = LSPB(qTh1Max, 1/6*pi, 1/12*pi);
+    [t, qTh2,  vTh2,  aTh2] = LSPB(qTh2Max, 1/6*pi, 1/12*pi);
     [t, qD3,  vD3,  aD3]    = LSPB(qD3Max, 0.1, 1);
-    [t, qTh4,  vTh4,  aTh4] = LSPB(qTh4Max, vMax, aMax);
+    [t, qTh4,  vTh4,  aTh4] = LSPB(qTh4Max, 1/6*pi, 1/12*pi);
 elseif strcmp(typeTrajectory, 'Scurve5')
 %     [t, q, qdot, q2dot] = Scurve5(qMax, vMax, aMax);
-    [t, qTh1,  vTh1,  aTh1] = Scurve5(qTh1Max, vMax, aMax);
-    [t, qTh2,  vTh2,  aTh2] = Scurve5(qTh2Max, vMax, aMax);
+    [t, qTh1,  vTh1,  aTh1] = Scurve5(qTh1Max, 1/6*pi, 1/6*pi);
+    [t, qTh2,  vTh2,  aTh2] = Scurve5(qTh2Max, 1/6*pi, 1/6*pi);
     [t, qD3,  vD3,  aD3]    = Scurve5(qD3Max, 0.1, 1);
-    [t, qTh4,  vTh4,  aTh4] = Scurve5(qTh4Max, vMax, aMax);
+    [t, qTh4,  vTh4,  aTh4] = Scurve5(qTh4Max, 1/6*pi, 1/6*pi);
 
 elseif strcmp(typeTrajectory, 'Scurve7')
 %     [t, q, qdot, q2dot] = Scurve7(qMax, vMax, aMax);
-    [t, qTh1,  vTh1,  aTh1] = Scurve7(qTh1Max, vMax, aMax);
-    [t, qTh2,  vTh2,  aTh2] = Scurve7(qTh2Max, vMax, aMax);
+    [t, qTh1,  vTh1,  aTh1] = Scurve7(qTh1Max, 1/6*pi, 1/6*pi);
+    [t, qTh2,  vTh2,  aTh2] = Scurve7(qTh2Max, 1/6*pi, 1/6*pi);
     [t, qD3,  vD3,  aD3]    = Scurve7(qD3Max, 0.1, 1);
-    [t, qTh4,  vTh4,  aTh4] = Scurve7(qTh4Max, vMax, aMax);
+    [t, qTh4,  vTh4,  aTh4] = Scurve7(qTh4Max, 1/6*pi, 1/6*pi);
 end
 
     pEEF = zeros(4, length(t));
@@ -1071,7 +1063,8 @@ for i = 1:length(t)
     scara = scara.update();
     Update_EndEffector(scara, handles);
     scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
-    pEEF(:,i) = scara.EndEffector;
+    pEEF(:,i) = scara.EndEffector
+
 
 
     plot(handles.axes_Th1, t(1:i), qTh1(1:i), 'b-');

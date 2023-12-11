@@ -1,4 +1,6 @@
 function [t, q, qdot, q2dot] = Scurvmaxe7(pmax, vmax, amax)
+pmax = abs(pmax);
+
 jmax = 2/6*pi;
 if amax > (1/2*pmax*jmax^2)^(1/3)
     amax = (1/2*pmax*jmax^2)^(1/3);
