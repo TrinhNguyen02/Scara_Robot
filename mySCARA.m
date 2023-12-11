@@ -317,7 +317,7 @@ function Btn_Reset_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global scara
-    clear clc
+    clear all
     scara = scara.set_joint_variable(1, 0);
     scara = scara.set_joint_variable(2, 0);
     scara = scara.set_joint_variable(3, 0.745);
@@ -513,27 +513,97 @@ function Btn_Forward_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global scara
-Th1 = get(handles.slider1_th1, 'Value');
-Th2 = get(handles.slider2_th2, 'Value');
+Th1 = deg2rad(get(handles.slider1_th1, 'Value'));
+Th2 = deg2rad(get(handles.slider2_th2, 'Value'));
 D3  = get(handles.slider3_d3,'value')-0.745;
-Th4 = get(handles.slider4_th4, 'Value');
+Th4 = deg2rad(get(handles.slider4_th4, 'Value'));
 
-for k=0:60
-    Th1Temp = Th1*k/60;
-    Th2Temp = Th2*k/60;
-    D3Temp = D3*k/60+ 0.745;
-    Th4Temp = Th4*k/60;
-    scara = scara.set_joint_variable(1, deg2rad(Th1Temp));
-    scara = scara.set_joint_variable(2, deg2rad(Th2Temp));
-    scara = scara.set_joint_variable(3, D3Temp);
-    scara = scara.set_joint_variable(4, deg2rad(Th4Temp));
-    scara = scara.update();
-    Update_EndEffector(scara, handles);
-    scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
+contents = cellstr(get(handles.Trajectory, 'String'));
+typeTrajectory = contents{get(handles.Trajectory, 'Value')};
+
+if strcmp(typeTrajectory, 'LSPB')
+%     [t, q, qdot, q2dot] = LSPB(qMax, vMax, aMax);
+    [t, qTh1,  vTh1,  aTh1] = LSPB(Th1, 1/6*pi, 1/12*pi);
+    [t, qTh2,  vTh2,  aTh2] = LSPB(Th2, 1/6*pi, 1/12*pi);
+    [t, qD3,  vD3,  aD3]    = LSPB(D3, 0.1, 1);
+    [t, qTh4,  vTh4,  aTh4] = LSPB(Th4, 1/6*pi, 1/12*pi);
+elseif strcmp(typeTrajectory, 'Scurve5')
+    [t, qTh1,  vTh1,  aTh1] = Scurve5(Th1, 1/6*pi, 1/6*pi);
+    [t, qTh2,  vTh2,  aTh2] = Scurve5(Th2, 1/6*pi, 1/6*pi);
+    [t, qD3,  vD3,  aD3]    = Scurve5(D3, 0.1, 1);
+    [t, qTh4,  vTh4,  aTh4] = Scurve5(Th4, 1/6*pi, 1/6*pi);
+
+elseif strcmp(typeTrajectory, 'Scurve7')
+    [t, qTh1,  vTh1,  aTh1] = Scurve7(Th1, 1/6*pi, 1/6*pi);
+    [t, qTh2,  vTh2,  aTh2] = Scurve7(Th2, 1/6*pi, 1/6*pi);
+    [t, qTh2,  vD3,  aD3]    = Scurve7(D3, 0.1, 1);
+    [t, qTh4,  vTh4,  aTh4] = Scurve7(Th4, 1/6*pi, 1/6*pi);
+end
+
+    pEEF = zeros(4, length(t));
+    joint =  zeros(4, length(t));
+    joint(1,:) = linspace(0,Th1 ,length(t));
+    joint(2,:) = linspace(0,Th2,length(t));
+    joint(3,:) = linspace(0,D3 ,length(t));
+    joint(4,:) = linspace(0,Th4,length(t));
+
+for i = 1:length(t)
 
    set(handles.Btn_Forward,'Enable','off','String', 'Not Push');
 
+    scara = scara.set_joint_variable(1, joint(1,i));
+    scara = scara.set_joint_variable(2, joint(2,i));
+    scara = scara.set_joint_variable(3, joint(3,i)+0.745);
+    scara = scara.set_joint_variable(4, joint(4,i));
+    scara = scara.update();
+    Update_EndEffector(scara, handles);
+    scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
+    pEEF(:,i) = scara.EndEffector
+
+
+    plot(handles.axes_Th1, t(1:i), qTh1(1:i), 'b-');
+    grid(handles.axes_Th1, 'on');
+    plot(handles.axes_vTh1, t(1:i) , vTh1(1:i), 'b-');
+    grid(handles.axes_vTh1, 'on');
+    plot(handles.axes_aTh1 , t(1:i), aTh1(1:i), 'b-');
+    grid(handles.axes_aTh1, 'on');
+
+    plot(handles. axes_Th2, t(1:i), qTh2(1:i), 'b-');
+    grid(handles. axes_Th2, 'on');
+    plot(handles.axes_vTh2, t(1:i), vTh2(1:i), 'b-');
+    grid(handles.axes_vTh2, 'on');
+    plot(handles.axes_aTh2 , t(1:i), aTh2(1:i), 'b-');
+    grid(handles.axes_aTh2, 'on');
+
+
+    plot(handles.axes_D3, t(1:i), qD3(1:i), 'b-');
+    grid(handles.axes_D3, 'on');
+    plot(handles.axes_vD3, t(1:i), vD3(1:i), 'b-');
+    grid(handles.axes_vD3, 'on');
+    plot(handles.axes_aD3 , t(1:i), aD3(1:i), 'b-');
+    grid(handles.axes_aD3, 'on');
+
+
+    plot(handles.axes_Th4, t(1:i), qTh4(1:i), 'b-');
+    grid(handles.axes_Th4, 'on');
+    plot(handles.axes_vTh4, t(1:i), vTh4(1:i), 'b-');
+    grid(handles.axes_vTh4, 'on');
+    plot(handles.axes_aTh4 , t(1:i), aTh4(1:i), 'b-');
+    grid(handles.axes_aTh4, 'on');
+
+        
+    plot(handles.axes_pX, t(1:i), pEEF(1,1:i), 'b-');
+    grid(handles.axes_pX, 'on');
+    plot(handles.axes_pY, t(1:i), pEEF(2,1:i), 'b-');
+    grid(handles.axes_pY, 'on');
+    plot(handles.axes_pZ , t(1:i), pEEF(3,1:i), 'b-');
+    grid(handles.axes_pZ, 'on');    
+  
+    plot3(handles.axes1, pEEF(1,1:i), pEEF(2,1:i), pEEF(3,1:i), 'LineWidth', 2, 'Color', [0.9 0.1 0.1]);
+    
 end
+
+    
 set(handles.Btn_Forward,'Enable','on','String', 'Forward');
 
 
@@ -946,34 +1016,35 @@ contents = cellstr(get(handles.Trajectory, 'String'));
 typeTrajectory = contents{get(handles.Trajectory, 'Value')};
 
 if strcmp(typeTrajectory, 'LSPB')
-    [t, q, qdot, q2dot] = LSPB(qMax, vMax, aMax);
+%     [t, q, qdot, q2dot] = LSPB(qMax, vMax, aMax);
     [t, qTh1,  vTh1,  aTh1] = LSPB(qTh1Max, 1/6*pi, 1/12*pi);
     [t, qTh2,  vTh2,  aTh2] = LSPB(qTh2Max, 1/6*pi, 1/12*pi);
     [t, qD3,  vD3,  aD3]    = LSPB(qD3Max, 0.1, 1);
     [t, qTh4,  vTh4,  aTh4] = LSPB(qTh4Max, 1/6*pi, 1/12*pi);
 elseif strcmp(typeTrajectory, 'Scurve5')
-    [t, q, qdot, q2dot] = Scurve5(qMax, vMax, aMax);
+%     [t, q, qdot, q2dot] = Scurve5(qMax, vMax, aMax);
     [t, qTh1,  vTh1,  aTh1] = Scurve5(qTh1Max, 1/6*pi, 1/6*pi);
     [t, qTh2,  vTh2,  aTh2] = Scurve5(qTh2Max, 1/6*pi, 1/6*pi);
     [t, qD3,  vD3,  aD3]    = Scurve5(qD3Max, 0.1, 1);
     [t, qTh4,  vTh4,  aTh4] = Scurve5(qTh4Max, 1/6*pi, 1/6*pi);
 
 elseif strcmp(typeTrajectory, 'Scurve7')
-    [t, q, qdot, q2dot] = Scurve7(qMax, vMax, aMax);
+%     [t, q, qdot, q2dot] = Scurve7(qMax, vMax, aMax);
     [t, qTh1,  vTh1,  aTh1] = Scurve7(qTh1Max, 1/6*pi, 1/6*pi);
     [t, qTh2,  vTh2,  aTh2] = Scurve7(qTh2Max, 1/6*pi, 1/6*pi);
-    [t, qD3,  vD3,  aD3]    = Scurve7(qD3Max, 0.1, 1);
+    [t, qTh2,  vD3,  aD3]    = Scurve7(qD3Max, 0.1, 1);
     [t, qTh4,  vTh4,  aTh4] = Scurve7(qTh4Max, 1/6*pi, 1/6*pi);
 end
 
-    [t, p, pdot, p2dot] = Linear_Interpolation(pC, pN, t, q, qdot, q2dot);
-
-    
-
+    pEEF = zeros(4, length(t));
+    joint =  zeros(4, length(t));
+    joint(1,:) = linspace(jointCurr(1),jointNext(1) ,length(t));
+    joint(2,:) = linspace(jointCurr(2),jointNext(2) ,length(t));
+    joint(3,:) = linspace(jointCurr(3),jointNext(3) ,length(t));
+    joint(4,:) = linspace(jointCurr(4),jointNext(4) ,length(t));
 
 for i = 1:length(t)
-    point = [p(1,i), p(2,i), p(3,i), p(4,i)];
-    joint(:,i) = Inverse_Kinematics(scara.a, scara.alpha, scara.d, scara.theta, point);
+
     set(handles.motionBtn,'Enable','off','String', 'Not Push');
 
     scara = scara.set_joint_variable(1, joint(1,i));
@@ -983,13 +1054,14 @@ for i = 1:length(t)
     scara = scara.update();
     Update_EndEffector(scara, handles);
     scara.plot(handles.axes1, get(handles.Coords,'Value'), get(handles.Workspace,'Value'));
+    pEEF(:,i) = scara.EndEffector
 
-    plot(handles.axes_s, t(1:i), q(1:i), 'b-');
-    grid(handles.axes_s, 'on');
-    plot(handles.axes_v , t(1:i), qdot(1:i), 'b-');
-    grid(handles.axes_v, 'on');
-    plot(handles.axes_a , t(1:i), q2dot(1:i), 'b-');
-    grid(handles.axes_a, 'on');
+%     plot(handles.axes_s, t(1:i), q(1:i), 'b-');
+%     grid(handles.axes_s, 'on');
+%     plot(handles.axes_v , t(1:i), qdot(1:i), 'b-');
+%     grid(handles.axes_v, 'on');
+%     plot(handles.axes_a , t(1:i), q2dot(1:i), 'b-');
+%     grid(handles.axes_a, 'on');
 
 
 
@@ -1024,14 +1096,15 @@ for i = 1:length(t)
     grid(handles.axes_aTh4, 'on');
 
         
-    plot(handles.axes_pX, t(1:i), p(1,1:i), 'b-');
+    plot(handles.axes_pX, t(1:i), pEEF(1,1:i), 'b-');
     grid(handles.axes_pX, 'on');
-    plot(handles.axes_pY, t(1:i), p(2,1:i), 'b-');
+    plot(handles.axes_pY, t(1:i), pEEF(2,1:i), 'b-');
     grid(handles.axes_pY, 'on');
-    plot(handles.axes_pZ , t(1:i), p(3,1:i), 'b-');
+    plot(handles.axes_pZ , t(1:i), pEEF(3,1:i), 'b-');
     grid(handles.axes_pZ, 'on');    
   
-    plot3(handles.axes1, p(1,1:i), p(2,1:i), p(3,1:i), 'LineWidth', 2, 'Color', [0.9 0.1 0.1]);
+    plot3(handles.axes1, pEEF(1,1:i), pEEF(2,1:i), pEEF(3,1:i), 'LineWidth', 2, 'Color', [0.9 0.1 0.1]);
+    
 end
 %     plot(handles.axes_vTh1, t, vTh1, 'b-');
 %     grid(handles.axes_vTh1, 'on');

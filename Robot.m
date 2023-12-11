@@ -7,7 +7,7 @@
         type, base, n           % type cua khop, base vi tri co so, n so luong 
         x, DH,  EndEffector      % x la mang chua toa do 3D (x, y, z) cac diem cua khop
                                 % T ma tran DH 
-                                %  EndEffector la mang [x, y, z, roll, pitch, yaw]
+                                %  EndEffector la mang [x, y, z, yaw]
                            
 
     end
